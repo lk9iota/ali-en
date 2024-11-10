@@ -34,7 +34,11 @@ type Options struct {
 
 type runner func(ctx context.Context, t terminalapi.Terminal, c *container.Container, opts ...termdash.Option) error
 
-func Run(targetURL string, storage storage.Reader, attacker attacker.Attacker, opts Options) error {
+func Run(targetURL string, storage storage.Reader, attacker attacker.Attacker, opts Options, isRestart bool) error {
+	if isRestart {
+		fmt.Print("Attack with auto restart.")
+	}
+
 	var (
 		t   terminalapi.Terminal
 		err error

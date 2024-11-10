@@ -58,6 +58,7 @@ type cli struct {
 	tlsCertFile        string
 	tlsKeyFile         string
 	caCert             string
+	isRestart          bool
 
 	//options for gui
 	queryRange     time.Duration
@@ -70,6 +71,15 @@ type cli struct {
 }
 
 func main() {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("Recovered from panic: %v", r)
+			// Restart the application
+			os.Args = append(os.Args, "--restart")
+			main()
+		}
+	}()
+
 	c, err := parseFlags(os.Stdout, os.Stderr)
 	if err != nil {
 		os.Exit(0)
@@ -107,6 +117,7 @@ func parseFlags(stdout, stderr io.Writer) (*cli, error) {
 	flagSet.StringVar(&c.resolvers, "resolvers", "", "Custom DNS resolver addresses; comma-separated list.")
 	flagSet.DurationVar(&c.queryRange, "query-range", gui.DefaultQueryRange, "The results within the given time range will be drawn on the charts")
 	flagSet.DurationVar(&c.redrawInterval, "redraw-interval", gui.DefaultRedrawInterval, "Specify how often it redraws the screen")
+	flagSet.BoolVar(&c.isRestart, "restart", false, "Indicates if the program is restarting after a crash")
 	flagSet.Usage = c.usage
 	if err := flagSet.Parse(os.Args[1:]); err != nil {
 		if !errors.Is(err, flag.ErrHelp) {
@@ -118,6 +129,10 @@ func parseFlags(stdout, stderr io.Writer) (*cli, error) {
 }
 
 func (c *cli) run(args []string) int {
+	if c.isRestart {
+		fmt.Fprintln(c.stderr, "Restarting after crash...")
+	}
+
 	if c.version {
 		fmt.Fprintf(c.stderr, "version=%s, commit=%s, buildDate=%s, os=%s, arch=%s\n", version, commit, date, runtime.GOOS, runtime.GOARCH)
 		return 0
@@ -159,8 +174,7 @@ func (c *cli) run(args []string) int {
 		gui.Options{
 			QueryRange:     c.queryRange,
 			RedrawInternal: c.redrawInterval,
-		},
-	); err != nil {
+		}, c.isRestart); err != nil {
 		fmt.Fprintf(c.stderr, "failed to start application: %s\n", err.Error())
 		c.usage()
 		return 1
