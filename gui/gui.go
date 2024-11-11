@@ -98,9 +98,14 @@ func run(t terminalapi.Terminal, r runner, targetURL string, storage storage.Rea
 	go d.updateMetrics(ctx)
 	go d.redrawMetrics(ctx)
 
-	attack(ctx, d, a) // Attack immediately
+	// Start the attack immediately in a goroutine
+	go func() {
+		// Small delay to ensure GUI is ready
+		time.Sleep(100 * time.Millisecond)
+		attack(ctx, d, a)
+	}()
 
-	k := keybinds(ctx, cancel, c, d, a)
+	k := keybinds(cancel, c, d, a)
 
 	return r(ctx, t, c, termdash.KeyboardSubscriber(k), termdash.RedrawInterval(opts.RedrawInternal))
 }
