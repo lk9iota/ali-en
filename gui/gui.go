@@ -105,7 +105,7 @@ func run(t terminalapi.Terminal, r runner, targetURL string, storage storage.Rea
 		attack(ctx, d, a)
 	}()
 
-	k := keybinds(cancel, c, d, a)
+	k := keybinds(cancel, c, d)
 
 	return r(ctx, t, c, termdash.KeyboardSubscriber(k), termdash.RedrawInterval(opts.RedrawInternal))
 }

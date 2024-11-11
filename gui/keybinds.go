@@ -25,7 +25,7 @@ func navigateCharts(chartFuncs []func()) func(bool) {
 	}
 }
 
-func keybinds(cancel context.CancelFunc, c *container.Container, dr *drawer, a attacker.Attacker) func(*terminalapi.Keyboard) {
+func keybinds(cancel context.CancelFunc, c *container.Container, dr *drawer) func(*terminalapi.Keyboard) {
 	funcs := []func(){
 		func() { c.Update(chartID, dr.gridOpts.latency...) },
 		func() { c.Update(chartID, dr.gridOpts.percentiles...) },
